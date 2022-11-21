@@ -40,10 +40,8 @@ class AdvertisementView(MethodView):
                         'owner': advertisement.owner
                     }
                 else:
-                    answer = {
-                        'status': 404,
-                        'message': 'advertisement not found'
-                        }
+                    answer = jsonify({'message': 'advertisement not found'})
+                    answer.status_code = 404
             else:
                 advertisements = session.query(Advertisement).all()
                 answer = {}
@@ -56,10 +54,10 @@ class AdvertisementView(MethodView):
                             'created_at': adv.created_at,
                             'owner': adv.owner
                         }
-                answer = {
+                answer = jsonify({
                     'response': {'count': len(advertisements), 'items': answer}
-                }
-            return jsonify(answer)
+                })
+            return answer
 
     def post(self):
         load_data = request.json
@@ -67,7 +65,9 @@ class AdvertisementView(MethodView):
             new_adv = Advertisement(**load_data)
             session.add(new_adv)
             session.commit()
-            return jsonify({'cereated advertisement': load_data})
+            answer = jsonify({'cereated advertisement': load_data})
+            answer.status_code = 201
+            return answer
 
     def patch(self, adv_id):
         updated_data = request.json
@@ -76,13 +76,11 @@ class AdvertisementView(MethodView):
             if adv.count():
                 adv.update(updated_data)
                 session.commit()
-                return jsonify({'status': "updated"})
+                return jsonify({'message': f"adv {adv_id} updated"})
             else:
-                answer = {
-                    'status': 404,
-                    'message': 'advertisement not found'
-                }
-                return jsonify(answer)
+                answer = jsonify({'message': 'advertisement not found'})
+                answer.status_code = 404
+                return answer
 
     def delete(self, adv_id):
         with Session() as session:
@@ -90,7 +88,9 @@ class AdvertisementView(MethodView):
             if adv:
                 session.delete(adv)
                 session.commit()
-                return jsonify({'status': 'deleted'})
+                answer = jsonify({'message': f'adv {adv_id} deleted'})
+                answer.status_code = 204
+                return answer
             else:
                 answer = {
                     'status': 404,
